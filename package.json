@@ -1,0 +1,15 @@
+{
+  "name": "noer",
+  "version": "1.0.0",
+  "description": "Simple node webserver",
+  "main": "index.js",
+  "author": "alexsch01",
+  "license": "MIT",
+  "keywords": [
+    "simple",
+    "node",
+    "webserver",
+    "web",
+    "server"
+  ]
+}
