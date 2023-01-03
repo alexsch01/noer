@@ -13,18 +13,17 @@ function _serveHTML(res, file, dict={}) {
     })
 }
 
-module.exports = function (file, port, func = (serveHTML, data) => { serveHTML() }, firstLoad = (serveHTML) => { serveHTML() }, httpsOptions={key: null, cert: null}) {
+module.exports = function (file, port, func = (serveHTML, data) => serveHTML(), firstLoad = (serveHTML) => serveHTML(), httpsOptions={key: null, cert: null}) {
     file = path + file
-    func ||= (serveHTML, data) => { serveHTML() }
-    firstLoad ||= (serveHTML) => { serveHTML() }
+    func ||= (serveHTML, data) => serveHTML()
+    firstLoad ||= (serveHTML) => serveHTML()
 
     let protocol
     if(httpsOptions.key && httpsOptions.cert) {
         httpsOptions.key = fs.readFileSync(path + httpsOptions.key)
         httpsOptions.cert = fs.readFileSync(path + httpsOptions.cert)
         protocol = https
-    }
-    else {
+    } else {
         protocol = http
     }
     
