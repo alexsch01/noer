@@ -1,10 +1,11 @@
+const https = require('https')
 const http = require('http')
-const fsPromises = require('fs/promises')
+const fs = require('fs')
 const qs = require('querystring')
-const path = require('path')
+const path = require('path').join(__dirname, '../../')
 
 function _serveHTML(res, file, dict={}) {
-    fsPromises.readFile(file).then(contents => {
+    fs.promises.readFile(file).then(contents => {
         let html = contents.toString()
         for(let key in dict)
             html = html.replaceAll(`\${${key}}`, dict[key])
@@ -12,11 +13,22 @@ function _serveHTML(res, file, dict={}) {
     })
 }
 
-module.exports = function (file, port, func = (serveHTML, data) => { serveHTML() }, firstLoad = (serveHTML) => { serveHTML() }) {
-    file = path.join(__dirname, '../../') + file
+module.exports = function (file, port, func = (serveHTML, data) => { serveHTML() }, firstLoad = (serveHTML) => { serveHTML() }, httpsOptions={key: null, cert: null}) {
+    file = path + file
     func ||= (serveHTML, data) => { serveHTML() }
+    firstLoad ||= (serveHTML) => { serveHTML() }
+
+    let protocol
+    if(httpsOptions.key && httpsOptions.cert) {
+        httpsOptions.key = fs.readFileSync(path + httpsOptions.key)
+        httpsOptions.cert = fs.readFileSync(path + httpsOptions.cert)
+        protocol = https
+    }
+    else {
+        protocol = http
+    }
     
-    const server = http.createServer((req, res) => {
+    const server = protocol.createServer(httpsOptions, (req, res) => {
         if(req.method == 'POST') {
             let body = ''
             req.on('data', chunk => {
