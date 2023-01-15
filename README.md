@@ -81,6 +81,6 @@ noer('index.html', 8080, (serveHTML, data) => {
 
 #### How To Run
 ```
-node server.js
+node --watch server.js
 ```
 In a web browser, go to http://localhost:8080
