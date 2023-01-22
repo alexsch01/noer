@@ -73,7 +73,7 @@ noer('index.html', 8080, (serveHTML, data) => {
         operator = '/'
     }
     if(Number.isFinite(answer))
-        serveHTML({'results': `<p>${left} ${operator} ${right} = ${answer}</p>`})
+        serveHTML({results: `<p>${left} ${operator} ${right} = ${answer}</p>`})
     else
         serveHTML()
 })
