@@ -2,7 +2,7 @@ const https = require('https')
 const http = require('http')
 const fs = require('fs')
 const qs = require('querystring')
-const path = require('path').join(__dirname, '../../')
+const path = process.cwd() + require('path').sep
 
 function _serveHTML(res, file, dict={}) {
     fs.promises.readFile(file).then(contents => {
