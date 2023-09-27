@@ -27,7 +27,7 @@ module.exports = function (file, port, func = (serveHTML, data) => serveHTML(), 
         protocol = http
     }
     
-    const server = protocol.createServer(httpsOptions, (req, res) => {
+    protocol.createServer(httpsOptions, (req, res) => {
         if(req.method == 'POST') {
             let body = ''
             req.on('data', chunk => {
@@ -43,6 +43,5 @@ module.exports = function (file, port, func = (serveHTML, data) => serveHTML(), 
                 _serveHTML(res, file, dict) 
             })
         }
-    })
-    server.listen(port)
+    }).listen(port)
 }
