@@ -8,8 +8,8 @@ function _serveHTML(res, file, dict={}) {
     fs.promises.readFile(file).then(contents => {
         let html = contents.toString()
         for(let key in dict)
-            html = html.replaceAll(`\${${key}}`, dict[key])
-        res.end(html.replace(/\${.*}/g, ''))
+            html = html.replaceAll(`#{${key}}`, dict[key])
+        res.end(html.replace(/\#{.*}/g, ''))
     })
 }
 
