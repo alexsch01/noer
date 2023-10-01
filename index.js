@@ -4,12 +4,13 @@ const fs = require('fs/promises')
 const qs = require('querystring')
 const path = process.cwd() + require('path').sep
 
-let originalHTML, html
+let originalHTML
 
 async function _serveHTML(res, file, dict={}) {
     if (originalHTML == undefined) {
-        originalHTML = html = (await fs.readFile(file)).toString()
+        originalHTML = (await fs.readFile(file)).toString()
     }
+    let html = originalHTML
     for(let key in dict) {
         html = originalHTML.replaceAll(`#{${key}}`, dict[key])
     }
