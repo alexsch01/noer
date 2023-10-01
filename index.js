@@ -12,7 +12,7 @@ async function _serveHTML(res, file, dict={}) {
     }
     let html = originalHTML
     for(let key in dict) {
-        html = originalHTML.replaceAll(`#{${key}}`, dict[key])
+        html = html.replaceAll(`#{${key}}`, dict[key])
     }
     res.end(html.replace(/\#{.*}/g, ''))
 }
