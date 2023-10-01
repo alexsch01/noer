@@ -1,11 +1,11 @@
 const https = require('https')
 const http = require('http')
-const fs = require('fs')
+const fs = require('fs/promises')
 const qs = require('querystring')
 const path = process.cwd() + require('path').sep
 
 function _serveHTML(res, file, dict={}) {
-    fs.promises.readFile(file).then(contents => {
+    fs.readFile(file).then(contents => {
         let html = contents.toString()
         for(let key in dict)
             html = html.replaceAll(`#{${key}}`, dict[key])
