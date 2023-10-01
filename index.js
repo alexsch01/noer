@@ -4,13 +4,16 @@ const fs = require('fs/promises')
 const qs = require('querystring')
 const path = process.cwd() + require('path').sep
 
-function _serveHTML(res, file, dict={}) {
-    fs.readFile(file).then(contents => {
-        let html = contents.toString()
-        for(let key in dict)
-            html = html.replaceAll(`#{${key}}`, dict[key])
-        res.end(html.replace(/\#{.*}/g, ''))
-    })
+let originalHTML, html
+
+async function _serveHTML(res, file, dict={}) {
+    if (originalHTML == undefined) {
+        originalHTML = html = (await fs.readFile(file)).toString()
+    }
+    for(let key in dict) {
+        html = originalHTML.replaceAll(`#{${key}}`, dict[key])
+    }
+    res.end(html.replace(/\#{.*}/g, ''))
 }
 
 module.exports = function (file, [port, hostname], func = (serveHTML, data) => serveHTML(), firstLoad = (serveHTML) => serveHTML(), httpsOptions={key: null, cert: null}) {
@@ -35,12 +38,12 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
             })
             req.on('end', () => {
                 func(dict => {
-                    _serveHTML(res, file, dict) 
+                    _serveHTML(res, file, dict)
                 }, qs.parse(body))
             })
         } else {
             firstLoad(dict => {
-                _serveHTML(res, file, dict) 
+                _serveHTML(res, file, dict)
             })
         }
     })
