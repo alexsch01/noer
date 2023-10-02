@@ -10,37 +10,6 @@ let originalHTML
 async function _serveHTML(res, file, dict={}) {
     if(originalHTML == undefined) {
         originalHTML = (await fs.readFile(file)).toString()
-
-        let scriptFile
-        for(let x of originalHTML.matchAll(/\<script src=(.*?)\>\<\/script\>/g)) {
-            try {
-                scriptFile = x[1]
-                if(
-                    (scriptFile.startsWith('\'') && scriptFile.endsWith('\'')) || 
-                    (scriptFile.startsWith('"') && scriptFile.endsWith('"'))
-                ) {
-                    scriptFile = scriptFile.slice(1, -1)
-                    originalHTML = originalHTML.replace(x[0], `<script>${(await fs.readFile(path.resolve(file, '..', scriptFile))).toString()}</script>`)
-                }
-            } catch(e) {}
-        }
-
-        let cssFile
-        for(let x of 
-            Array.from(originalHTML.matchAll(/\<link rel="stylesheet" href=(.*?)\>/g)).concat(
-            Array.from(originalHTML.matchAll(/\<link rel='stylesheet' href=(.*?)\>/g))
-        )) {
-            try {
-                cssFile = x[1]
-                if(
-                    (cssFile.startsWith('\'') && cssFile.endsWith('\'')) || 
-                    (cssFile.startsWith('"') && cssFile.endsWith('"'))
-                ) {
-                    cssFile = cssFile.slice(1, -1)
-                    originalHTML = originalHTML.replace(x[0], `<style>${(await fs.readFile(path.resolve(file, '..', cssFile))).toString()}</style>`)
-                }
-            } catch(e) {}
-        }
     }
     let html = originalHTML
     for(let key in dict) {
@@ -62,22 +31,38 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
     } else {
         protocol = http
     }
+
+    let otherThanHTML = {}
     
     const server = protocol.createServer(httpsOptions, (req, res) => {
-        if(req.method == 'POST') {
-            let body = ''
-            req.on('data', chunk => {
-                body += chunk.toString()
-            })
-            req.on('end', () => {
-                func(dict => {
-                    _serveHTML(res, file, dict)
-                }, qs.parse(body))
-            })
+        if(req.url != '/') {
+            if(otherThanHTML[req.url]) {
+                res.end(otherThanHTML[req.url])
+            } else {
+                fs.readFile(path.resolve(file, '..', req.url.substring(1))).then((buffer) => {
+                    res.end(buffer)
+                    otherThanHTML[req.url] = buffer
+                }).catch((e) => {
+                    res.writeHead(404)
+                    res.end()
+                })
+            }
         } else {
-            firstLoad(dict => {
-                _serveHTML(res, file, dict)
-            })
+            if(req.method == 'POST') {
+                let body = ''
+                req.on('data', chunk => {
+                    body += chunk.toString()
+                })
+                req.on('end', () => {
+                    func(dict => {
+                        _serveHTML(res, file, dict)
+                    }, qs.parse(body))
+                })
+            } else {
+                firstLoad(dict => {
+                    _serveHTML(res, file, dict)
+                })
+            }
         }
     })
 
