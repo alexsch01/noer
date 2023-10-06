@@ -42,7 +42,7 @@ public/index.html
         <input name="right">
         <button name="divide">Divide</button>
     </form>
-    #{results}
+    @{results}
 </body>
 </html>
 ```
