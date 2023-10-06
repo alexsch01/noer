@@ -13,9 +13,9 @@ async function _serveHTML(res, file, dict={}) {
     }
     let html = originalHTML
     for(let key in dict) {
-        html = html.replaceAll(`#{${key}}`, dict[key])
+        html = html.replaceAll(`@{${key}}`, dict[key])
     }
-    res.end(html.replace(/\#{.*?}/g, ''))
+    res.end(html.replace(/@{.*?}/g, ''))
 }
 
 module.exports = function (file, [port, hostname], func = (serveHTML, data) => serveHTML(), firstLoad = (serveHTML) => serveHTML(), httpsOptions={key: null, cert: null}) {
