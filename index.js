@@ -1,18 +1,19 @@
 const https = require('https')
 const http = require('http')
-const fs = require('fs/promises')
+const fs = require('fs')
 const qs = require('querystring')
 const path = require('path')
 
+const fsPromises = fs.promises
 const myPath = process.cwd() + path.sep
 let originalHTML
 
 async function _serveHTML(res, file, dict={}) {
     if(originalHTML == undefined) {
-        originalHTML = (await fs.readFile(file)).toString()
+        originalHTML = (await fsPromises.readFile(file)).toString()
     }
     let html = originalHTML
-    for(let key in dict) {
+    for(const key in dict) {
         html = html.replaceAll(`@{${key}}`, dict[key])
     }
     res.end(html.replace(/@{.*?}/g, ''))
@@ -32,14 +33,14 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
         protocol = http
     }
 
-    let otherThanHTML = {}
+    const otherThanHTML = {}
     
     const server = protocol.createServer(httpsOptions, (req, res) => {
         if(req.url != '/') {
             if(otherThanHTML[req.url]) {
                 res.end(otherThanHTML[req.url])
             } else {
-                fs.readFile(path.resolve(file, '..', req.url.substring(1))).then((buffer) => {
+                fsPromises.readFile(path.resolve(file, '..', req.url.substring(1))).then((buffer) => {
                     res.end(buffer)
                     otherThanHTML[req.url] = buffer
                 }).catch((e) => {
