@@ -37,6 +37,10 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
     
     const server = protocol.createServer(httpsOptions, (req, res) => {
         if(req.url != '/') {
+            if(req.url.endsWith('.js')) {
+                res.setHeader("content-type", "text/javascript")
+            }
+            
             if(otherThanHTML[req.url]) {
                 res.end(otherThanHTML[req.url])
             } else {
