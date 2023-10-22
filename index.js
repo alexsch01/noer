@@ -71,6 +71,6 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
             }
         }
     }).listen(port, hostname, () => {
-        console.log(`Listening on ${server.address().address}:${server.address().port} - ${server.address().family}`)
+        console.log(`Listening on ${hostname}:${port}`)
     })
 }
