@@ -21,6 +21,7 @@ async function _serveHTML(res, file, dict={}) {
 
 module.exports = function (file, [port, hostname], func = (serveHTML, data) => serveHTML(), firstLoad = (serveHTML) => serveHTML(), httpsOptions={key: null, cert: null}) {
     file = myPath + file
+    hostname ||= 'localhost'
     func ||= (serveHTML, data) => serveHTML()
     firstLoad ||= (serveHTML) => serveHTML()
 
@@ -34,13 +35,13 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
     }
 
     const otherThanHTML = {}
-    
-    const server = protocol.createServer(httpsOptions, (req, res) => {
+
+    protocol.createServer(httpsOptions, (req, res) => {
         if(req.url != '/') {
             if(req.url.endsWith('.js')) {
                 res.setHeader('content-type', 'text/javascript')
             }
-            
+
             if(otherThanHTML[req.url]) {
                 res.end(otherThanHTML[req.url])
             } else {
@@ -69,13 +70,7 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
                 })
             }
         }
-    })
-
-    if(!hostname) {
-        hostname = 'localhost'
-    }
-
-    server.listen(port, hostname, () => {
+    }).listen(port, hostname, () => {
         console.log(`Listening on ${server.address().address}:${server.address().port} - ${server.address().family}`)
     })
 }
