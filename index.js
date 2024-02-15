@@ -17,10 +17,14 @@ async function _serveHTML(res, file, dict={}) {
     res.end(html.replace(/@{.*?}/g, ''))
 }
 
-module.exports = function (file, [port, hostname], func, firstLoad, httpsOptions={key: null, cert: null}) {
+module.exports = function (file, [port, hostname],
+    /** @type {(serveHTML, data) => serveHTML()} */ func,
+    /** @type {(serveHTML) => serveHTML()} */ firstLoad,
+    httpsOptions={key: null, cert: null}
+) {
     file = myPath + file
     hostname ??= 'localhost'
-    func ??= (serveHTML, data) => serveHTML()
+    func ??= (serveHTML) => serveHTML()
     firstLoad ??= (serveHTML) => serveHTML()
 
     let /** @type {http} */ protocol
