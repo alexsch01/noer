@@ -19,13 +19,11 @@ async function _serveHTML(res, file, dict={}) {
     res.end(html.replace(/@{.*?}/g, ''))
 }
 
-module.exports = function (file, [port, hostname], func = (serveHTML, data) => serveHTML(), firstLoad = (serveHTML) => serveHTML(), httpsOptions={key: null, cert: null}) {
+module.exports = function (file, [port, hostname]=[8080, 'localhost'], func = (serveHTML, data) => serveHTML(), firstLoad = (serveHTML) => serveHTML(), httpsOptions={key: null, cert: null}) {
     file = myPath + file
-    hostname ||= 'localhost'
-    func ||= (serveHTML, data) => serveHTML()
-    firstLoad ||= (serveHTML) => serveHTML()
+    hostname ??= 'localhost'
 
-    let protocol
+    let /** @type {http} */ protocol
     if(httpsOptions.key && httpsOptions.cert) {
         httpsOptions.key = fs.readFileSync(myPath + httpsOptions.key)
         httpsOptions.cert = fs.readFileSync(myPath + httpsOptions.cert)
@@ -36,7 +34,7 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
 
     const otherThanHTML = {}
 
-    protocol.createServer(httpsOptions, (req, res) => {
+    const server = protocol.createServer(httpsOptions, (req, res) => {
         if(req.url != '/') {
             if(req.url.endsWith('.js')) {
                 res.setHeader('content-type', 'text/javascript')
@@ -70,7 +68,9 @@ module.exports = function (file, [port, hostname], func = (serveHTML, data) => s
                 })
             }
         }
-    }).listen(port, hostname, () => {
-        console.log(`Listening on ${hostname}:${port}`)
+    })
+
+    server.listen(port, hostname, () => {
+        console.log(`Listening on ${hostname}:${server.address().port}`)
     })
 }
