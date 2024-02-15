@@ -9,9 +9,7 @@ const myPath = process.cwd() + path.sep
 let originalHTML
 
 async function _serveHTML(res, file, dict={}) {
-    if(originalHTML == undefined) {
-        originalHTML = (await fsPromises.readFile(file)).toString()
-    }
+    originalHTML ??= (await fsPromises.readFile(file)).toString()
     let html = originalHTML
     for(const key in dict) {
         html = html.replaceAll(`@{${key}}`, dict[key])
