@@ -18,8 +18,8 @@ async function _serveHTML(res, file, dict={}) {
 }
 
 module.exports = function (file, [port, hostname],
-    /** @type {(serveHTML, data) => serveHTML()} */ func,
-    /** @type {(serveHTML) => serveHTML()} */ firstLoad,
+    /** @type {(serveHTML, data) => {}} */ func,
+    /** @type {(serveHTML) => {}} */ firstLoad,
     httpsOptions={key: null, cert: null}
 ) {
     file = myPath + file
