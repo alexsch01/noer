@@ -18,13 +18,13 @@ async function _serveHTML(res, file, dict={}) {
 }
 
 module.exports = function (file, [port, hostname],
-    /** @type {(serveHTML, data) => {}} */ func,
+    /** @type {(serveHTML, data) => {}} */ postLoad,
     /** @type {(serveHTML) => {}} */ firstLoad,
     httpsOptions={key: null, cert: null}
 ) {
     file = myPath + file
     hostname ??= 'localhost'
-    func ??= (serveHTML) => serveHTML()
+    postLoad ??= (serveHTML) => serveHTML()
     firstLoad ??= (serveHTML) => serveHTML()
 
     let /** @type {http} */ protocol
@@ -62,7 +62,7 @@ module.exports = function (file, [port, hostname],
                     body += chunk.toString()
                 })
                 req.on('end', () => {
-                    func(dict => {
+                    postLoad(dict => {
                         _serveHTML(res, file, dict)
                     }, qs.parse(body))
                 })
