@@ -6,7 +6,9 @@ const path = require('path')
 
 const fsPromises = fs.promises
 const myPath = process.cwd() + path.sep
+
 let originalHTML
+let serveNeeded
 
 async function _serveHTML(res, file, dict={}) {
     originalHTML ??= (await fsPromises.readFile(file)).toString()
@@ -17,6 +19,15 @@ async function _serveHTML(res, file, dict={}) {
     res.end(html.replace(/@{.*?}/g, ''))
 }
 
+function makeSafe(func) {
+    return (serveHTML, data) => {
+        func.apply(null, [serveHTML, data])
+        if(serveNeeded) {
+            serveHTML()
+        }
+    }
+}
+
 module.exports = function (file, [port, hostname],
     /** @type {(serveHTML, data) => {}} */ postLoad,
     /** @type {(serveHTML) => {}} */ firstLoad,
@@ -24,8 +35,8 @@ module.exports = function (file, [port, hostname],
 ) {
     file = myPath + file
     hostname ??= 'localhost'
-    postLoad ??= (serveHTML) => serveHTML()
-    firstLoad ??= (serveHTML) => serveHTML()
+    postLoad = makeSafe(postLoad ?? ((serveHTML) => serveHTML()))
+    firstLoad =  makeSafe(firstLoad ?? ((serveHTML) => serveHTML()))
 
     let /** @type {http} */ protocol
     if(httpsOptions.key && httpsOptions.cert) {
@@ -39,6 +50,7 @@ module.exports = function (file, [port, hostname],
     const otherThanHTML = {}
 
     const server = protocol.createServer(httpsOptions, (req, res) => {
+        serveNeeded = true
         if(req.url != '/') {
             if(req.url.endsWith('.js')) {
                 res.setHeader('content-type', 'text/javascript')
@@ -56,7 +68,7 @@ module.exports = function (file, [port, hostname],
                 })
             }
         } else {
-            if(req.method == 'POST') {
+            if(req.method === 'POST') {
                 let body = ''
                 req.on('data', chunk => {
                     body += chunk.toString()
@@ -64,11 +76,13 @@ module.exports = function (file, [port, hostname],
                 req.on('end', () => {
                     postLoad(dict => {
                         _serveHTML(res, file, dict)
+                        serveNeeded = false
                     }, qs.parse(body))
                 })
             } else {
                 firstLoad(dict => {
                     _serveHTML(res, file, dict)
+                    serveNeeded = false
                 })
             }
         }
