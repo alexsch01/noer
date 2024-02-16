@@ -11,6 +11,7 @@ let originalHTML
 let serveNeeded
 
 async function _serveHTML(res, file, dict={}) {
+    serveNeeded = false
     originalHTML ??= (await fsPromises.readFile(file)).toString()
     let html = originalHTML
     for(const key in dict) {
@@ -29,8 +30,8 @@ function makeSafe(func) {
 }
 
 module.exports = function (file, [port, hostname],
-    /** @type {(serveHTML, data) => {}} */ postLoad,
-    /** @type {(serveHTML) => {}} */ firstLoad,
+    /** @type {(serveHTML: Function, data) => {}} */ postLoad,
+    /** @type {(serveHTML: Function) => {}} */ firstLoad,
     httpsOptions={key: null, cert: null}
 ) {
     file = myPath + file
@@ -76,13 +77,11 @@ module.exports = function (file, [port, hostname],
                 req.on('end', () => {
                     postLoad(dict => {
                         _serveHTML(res, file, dict)
-                        serveNeeded = false
                     }, qs.parse(body))
                 })
             } else {
                 firstLoad(dict => {
                     _serveHTML(res, file, dict)
-                    serveNeeded = false
                 })
             }
         }
