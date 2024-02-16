@@ -69,7 +69,7 @@ module.exports = function (file, [port, hostname],
                 })
             }
         } else {
-            if(req.method === 'POST') {
+            if(req.method == 'POST') {
                 let body = ''
                 req.on('data', chunk => {
                     body += chunk.toString()
