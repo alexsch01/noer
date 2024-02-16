@@ -63,9 +63,14 @@ module.exports = function (file, [port, hostname],
                 fsPromises.readFile(path.resolve(file, '..', req.url.substring(1))).then((buffer) => {
                     res.end(buffer)
                     otherThanHTML[req.url] = buffer
-                }).catch((e) => {
-                    res.writeHead(404)
-                    res.end()
+                }).catch((_) => {
+                    fsPromises.readFile(path.resolve(file, '..', req.url.substring(1), 'index.html')).then((buffer) => {
+                        res.end(buffer)
+                        otherThanHTML[req.url] = buffer
+                    }).catch((_) => {
+                        res.writeHead(404)
+                        res.end()
+                    })
                 })
             }
         } else {
