@@ -22,8 +22,8 @@ async function _serveHTML(res, file, dict={}) {
 
 function makeSafe(func) {
     if(typeof func == 'function') {
-        return (serveHTML, data) => {
-            func.apply(null, [serveHTML, data])
+        return async (serveHTML, data) => {
+            await func.apply(null, [serveHTML, data])
             if(serveNeeded) {
                 serveHTML()
             }
@@ -40,7 +40,7 @@ module.exports = function (file, [port, hostname],
     file = myPath + file
     hostname ??= 'localhost'
     postLoad = makeSafe(postLoad)
-    firstLoad =  makeSafe(firstLoad)
+    firstLoad = makeSafe(firstLoad)
 
     let /** @type {http} */ protocol
     if(httpsOptions.key && httpsOptions.cert) {
