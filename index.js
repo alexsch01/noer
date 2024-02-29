@@ -5,7 +5,14 @@ const qs = require('querystring')
 const path = require('path')
 
 const fsPromises = fs.promises
-const myPath = process.cwd() + path.sep
+
+let myPath
+if(fs.lstatSync(process.argv[1]).isDirectory()) {
+    myPath = process.argv[1]
+} else {
+    myPath = path.dirname(process.argv[1])
+}
+myPath += path.sep
 
 let originalHTML
 let serveNeeded
