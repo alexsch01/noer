@@ -5,12 +5,14 @@ const qs = require('querystring')
 const path = require('path')
 
 const fsPromises = fs.promises
+const location = process.argv[1]
+const isDev = (process.argv[2] == '--dev')
 
 let myPath
-if(fs.lstatSync(process.argv[1]).isDirectory()) {
-    myPath = process.argv[1]
+if(fs.lstatSync(location).isDirectory()) {
+    myPath = location
 } else {
-    myPath = path.dirname(process.argv[1])
+    myPath = path.dirname(location)
 }
 myPath += path.sep
 
@@ -19,7 +21,9 @@ let serveNeeded
 
 async function _serveHTML(res, file, dict={}) {
     serveNeeded = false
-    originalHTML ??= (await fsPromises.readFile(file)).toString()
+    if(originalHTML == undefined || isDev) {
+        originalHTML = (await fsPromises.readFile(file)).toString()
+    }
     let html = originalHTML
     for(const key in dict) {
         html = html.replaceAll(`@{${key}}`, dict[key])
@@ -67,7 +71,7 @@ module.exports = function (file, [port, hostname],
                 res.setHeader('content-type', 'text/javascript')
             }
 
-            if(otherThanHTML[req.url]) {
+            if(otherThanHTML[req.url] && !isDev) {
                 res.end(otherThanHTML[req.url])
             } else {
                 fsPromises.readFile(path.resolve(file, '..', req.url.substring(1))).then((buffer) => {
