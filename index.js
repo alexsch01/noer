@@ -8,6 +8,10 @@ const fsPromises = fs.promises
 const location = process.argv[1]
 const isDev = (process.argv[2] == '--dev')
 
+if(process.argv[2] != undefined && !isDev) {
+    /*      process.argv[2] is defined and it is not "--dev"      */ throw {}
+}
+
 let myPath
 if(fs.lstatSync(location).isDirectory()) {
     myPath = location
