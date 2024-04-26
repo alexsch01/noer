@@ -80,7 +80,15 @@ noer('public/index.html', [8080], (serveHTML, data) => {
 ```
 
 #### How To Run
+A file gets read from storage on the first call, then subsequent calls to this file use memory
 ```
 node server.js
+```
+In a web browser, go to http://localhost:8080
+
+#### Dev mode
+A file gets read from storage on all calls
+```
+node server.js --dev
 ```
 In a web browser, go to http://localhost:8080
