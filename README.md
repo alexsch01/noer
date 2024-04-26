@@ -86,7 +86,7 @@ node server.js
 ```
 In a web browser, go to http://localhost:8080
 
-#### Dev mode
+#### Dev Mode
 A file gets read from storage on all calls
 ```
 node server.js --dev
