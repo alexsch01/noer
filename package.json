@@ -11,5 +11,9 @@
     "webserver",
     "web",
     "server"
-  ]
+  ],
+  "bin": "bin.js",
+  "scripts": {
+    "preinstall": "node preinstall.js"
+  }
 }
