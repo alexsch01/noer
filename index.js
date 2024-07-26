@@ -71,8 +71,12 @@ module.exports = function (file, [port, hostname],
     const server = protocol.createServer(httpsOptions, (req, res) => {
         serveNeeded = true
         if(req.url != '/') {
-            if(req.url.endsWith('.js')) {
+            if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
                 res.setHeader('content-type', 'text/javascript')
+            }
+            
+            if(req.url.endsWith('.wasm')) {
+                res.setHeader('content-type', 'application/wasm')
             }
 
             if(otherThanHTML[req.url] && !isDev) {
