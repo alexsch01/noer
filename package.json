@@ -2,7 +2,7 @@
   "name": "noer",
   "version": "5.3.1",
   "description": "Simple node webserver",
-  "main": "index.js",
+  "main": "main.js",
   "author": "alexsch01",
   "license": "MIT",
   "keywords": [
@@ -12,8 +12,5 @@
     "web",
     "server"
   ],
-  "bin": "bin.js",
-  "scripts": {
-    "preinstall": "node preinstall.js"
-  }
+  "bin": "bin.js"
 }
