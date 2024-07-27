@@ -13,10 +13,10 @@ try {
 let indexHTML
 
 if(useGlobalPackage) {
-  processs.argv[1] = process.cwd()
+  process.argv[1] = process.cwd()
   indexHTML = 'index.html'
 } else {
-  processs.argv[1] = localPackageJSON
+  process.argv[1] = localPackageJSON
   indexHTML = 'public/index.html'
 }
 
