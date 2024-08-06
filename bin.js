@@ -23,4 +23,4 @@ if(useGlobalPackage) {
 const port = process.argv[2] ?? 8080
 
 process.argv[2] = '--dev'
-require('noer')(indexHTML, [8080])
+require('noer')(indexHTML, [port])
