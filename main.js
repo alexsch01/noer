@@ -21,8 +21,10 @@ if(fs.lstatSync(location).isDirectory()) {
 myPath += path.sep
 
 let originalHTML
+let serveNeeded
 
 async function _serveHTML(res, file, dict={}) {
+    serveNeeded = false
     if(originalHTML == undefined || isDev) {
         originalHTML = (await fsPromises.readFile(file)).toString()
     }
@@ -37,7 +39,9 @@ function makeSafe(func) {
     if(typeof func == 'function') {
         return async (serveHTML, data) => {
             await func.apply(null, [serveHTML, data])
-            serveHTML()
+            if(serveNeeded) {
+                serveHTML()
+            }
         }
     }
     return (serveHTML) => serveHTML()
@@ -65,6 +69,7 @@ module.exports = function (file, [port, hostname],
     const otherThanHTML = {}
 
     const server = protocol.createServer(httpsOptions, (req, res) => {
+        serveNeeded = true
         if(req.url != '/') {
             if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
                 res.setHeader('content-type', 'text/javascript')
