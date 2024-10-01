@@ -70,6 +70,7 @@ module.exports = function (file, [port, hostname],
 
     const server = protocol.createServer(httpsOptions, (req, res) => {
         serveNeeded = true
+        req.url = req.url.split('?')[0]
         if(req.url != '/') {
             if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
                 res.setHeader('content-type', 'text/javascript')
