@@ -43,7 +43,7 @@ function makeSafe(func) {
 }
 
 module.exports = function (file, [port, hostname],
-    /** @type {(serveHTML: Function, data) => {}} */ postLoad,
+    /** @type {(serveHTML: Function, data: Record<string, string>) => {}} */ postLoad,
     /** @type {(serveHTML: Function) => {}} */ firstLoad,
     httpsOptions={key: null, cert: null}
 ) {
