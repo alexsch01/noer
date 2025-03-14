@@ -1,3 +1,4 @@
+//@ts-check
 const https = require('https')
 const http = require('http')
 const fs = require('fs')
@@ -45,16 +46,17 @@ function makeSafe(func) {
 module.exports = function (
     /** @type {string} */ file, 
     /** @type {readonly [number, string?]} */ [port, hostname],
-    /** @type {(serveHTML: Function, data: Record<string, string>) => any} */ postLoad,
-    /** @type {(serveHTML: Function) => any} */ firstLoad,
-    /** @type {{key: any, cert: any}} */ httpsOptions,
-    /** @type {Record<string, string>} */ redirects,
+    /** @type {((serveHTML: Function, data: Record<string, string>) => any)?} */ postLoad,
+    /** @type {((serveHTML: Function) => any)?} */ firstLoad,
+    /** @type {{key: any, cert: any}?} */ httpsOptions,
+    /** @type {Record<string, string>?} */ redirects,
 ) {
     file = myPath + file
     hostname ??= 'localhost'
-    httpsOptions ??= {key: null, cert: null}
     postLoad = makeSafe(postLoad)
     firstLoad = makeSafe(firstLoad)
+    httpsOptions ??= {key: null, cert: null}
+    redirects ??= {}
 
     let /** @type {http} */ protocol
     if(httpsOptions.key && httpsOptions.cert) {
