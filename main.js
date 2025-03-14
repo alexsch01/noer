@@ -43,14 +43,16 @@ function makeSafe(func) {
 }
 
 module.exports = function (
-    file, 
+    /** @type {string} */ file, 
     /** @type {readonly [number, string?]} */ [port, hostname],
     /** @type {(serveHTML: Function, data: Record<string, string>) => any} */ postLoad,
     /** @type {(serveHTML: Function) => any} */ firstLoad,
-    httpsOptions={key: null, cert: null}
+    /** @type {{key: any, cert: any}} */ httpsOptions,
+    /** @type {Record<string, string>} */ redirects,
 ) {
     file = myPath + file
     hostname ??= 'localhost'
+    httpsOptions ??= {key: null, cert: null}
     postLoad = makeSafe(postLoad)
     firstLoad = makeSafe(firstLoad)
 
@@ -68,6 +70,17 @@ module.exports = function (
     const server = protocol.createServer(httpsOptions, (req, res) => {
         let serveNeeded = true
         req.url = req.url.split('?')[0]
+
+        for(const [origin, destination] of Object.entries(redirects)) {
+            if (req.url === origin) {
+                res.writeHead(302, {
+                    location: destination
+                })
+                res.end()
+                return
+            }
+        }
+
         if(req.url != '/') {
             if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
                 res.setHeader('content-type', 'text/javascript')
