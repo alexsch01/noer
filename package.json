@@ -1,6 +1,6 @@
 {
   "name": "noer",
-  "version": "5.7.0",
+  "version": "5.7.1",
   "description": "Simple node webserver",
   "main": "main.js",
   "author": "alexsch01",
