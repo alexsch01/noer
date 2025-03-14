@@ -42,9 +42,11 @@ function makeSafe(func) {
     return async (serveHTML) => serveHTML()
 }
 
-module.exports = function (file, [port, hostname],
-    /** @type {(serveHTML: Function, data: Record<string, string>) => {}} */ postLoad,
-    /** @type {(serveHTML: Function) => {}} */ firstLoad,
+module.exports = function (
+    file, 
+    /** @type {readonly [number, string?]} */ [port, hostname],
+    /** @type {(serveHTML: Function, data: Record<string, string>) => any} */ postLoad,
+    /** @type {(serveHTML: Function) => any} */ firstLoad,
     httpsOptions={key: null, cert: null}
 ) {
     file = myPath + file
@@ -87,7 +89,7 @@ module.exports = function (file, [port, hostname],
                         otherThanHTML[req.url] = buffer
                     }).catch((_) => {
                         res.writeHead(404)
-                        res.end()
+                        res.end("404 Not Found")
                     })
                 })
             }
