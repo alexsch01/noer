@@ -51,7 +51,7 @@ server.js
 ```js
 const noer = require('noer')
 
-noer('public/index.html', [8080], (serveHTML, data) => {
+noer('public/', [8080], (serveHTML, data) => {
     let answer, operator
     const left = parseFloat(data.left)
     const right = parseFloat(data.right)
