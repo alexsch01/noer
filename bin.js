@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const localPackageJSON = process.cwd() + require('path').sep + 'package.json'
+const localPackageJSON = require('path').resolve(process.cwd(), 'package.json')
 let useGlobalPackage
 
 try {
@@ -10,17 +10,17 @@ try {
   useGlobalPackage = true
 }
 
-let indexHTML
+let publicDir
 
 if(useGlobalPackage) {
   process.argv[1] = process.cwd()
-  indexHTML = 'index.html'
+  publicDir = './'
 } else {
   process.argv[1] = localPackageJSON
-  indexHTML = 'public/index.html'
+  publicDir = 'public/'
 }
 
 const port = process.argv[2] ?? 8080
 
 process.argv[2] = '--dev'
-require('noer')(indexHTML, [port])
+require('noer')(publicDir, [port])
