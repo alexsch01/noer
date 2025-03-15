@@ -44,14 +44,14 @@ function makeSafe(func) {
 }
 
 module.exports = function (
-    /** @type {string} */ file, 
+    /** @type {string} */ publicDir, 
     /** @type {readonly [number, string?]} */ [port, hostname],
     /** @type {((serveHTML: Function, data: Record<string, string>) => any)?} */ postLoad,
     /** @type {((serveHTML: Function) => any)?} */ firstLoad,
     /** @type {{key: any, cert: any}?} */ httpsOptions,
     /** @type {Record<string, string>?} */ redirects,
 ) {
-    file = myPath + file
+    publicDir = path.resolve(myPath, publicDir)
     hostname ??= 'localhost'
     postLoad = makeSafe(postLoad)
     firstLoad = makeSafe(firstLoad)
@@ -60,14 +60,15 @@ module.exports = function (
 
     let /** @type {http} */ protocol
     if(httpsOptions.key && httpsOptions.cert) {
-        httpsOptions.key = fs.readFileSync(myPath + httpsOptions.key)
-        httpsOptions.cert = fs.readFileSync(myPath + httpsOptions.cert)
+        httpsOptions.key = fs.readFileSync(path.resolve(myPath, httpsOptions.key))
+        httpsOptions.cert = fs.readFileSync(path.resolve(myPath, httpsOptions.cert))
         protocol = https
     } else {
         protocol = http
     }
 
     const otherThanHTML = {}
+    const rootIndexHTMLFile = path.resolve(publicDir, 'index.html')
 
     const server = protocol.createServer(httpsOptions, (req, res) => {
         let serveNeeded = true
@@ -95,11 +96,11 @@ module.exports = function (
             if(otherThanHTML[req.url] && !isDev) {
                 res.end(otherThanHTML[req.url])
             } else {
-                fsPromises.readFile(path.resolve(file, '..', req.url.substring(1))).then((buffer) => {
+                fsPromises.readFile(path.resolve(publicDir, req.url.substring(1))).then((buffer) => {
                     res.end(buffer)
                     otherThanHTML[req.url] = buffer
                 }).catch((_) => {
-                    fsPromises.readFile(path.resolve(file, '..', req.url.substring(1), 'index.html')).then((buffer) => {
+                    fsPromises.readFile(path.resolve(publicDir, req.url.substring(1), 'index.html')).then((buffer) => {
                         res.end(buffer)
                         otherThanHTML[req.url] = buffer
                     }).catch((_) => {
@@ -117,22 +118,22 @@ module.exports = function (
                 req.on('end', () => {
                     postLoad(dict => {
                         serveNeeded = false
-                        _serveHTML(res, file, dict)
+                        _serveHTML(res, rootIndexHTMLFile, dict)
                     }, qs.parse(body))
                     .then(() => {
                         if(serveNeeded) {
-                            _serveHTML(res, file)
+                            _serveHTML(res, rootIndexHTMLFile)
                         }
                     })
                 })
             } else if(req.method == 'GET') {
                 firstLoad(dict => {
                     serveNeeded = false
-                    _serveHTML(res, file, dict)
+                    _serveHTML(res, rootIndexHTMLFile, dict)
                 })
                 .then(() => {
                     if(serveNeeded) {
-                        _serveHTML(res, file)
+                        _serveHTML(res, rootIndexHTMLFile)
                     }
                 })
             }
