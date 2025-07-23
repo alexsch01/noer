@@ -25,14 +25,17 @@ public/index.html
                     e.preventDefault()
                     const data = Object.fromEntries(new FormData(e.target).entries())
 
-                    const resp = await fetch(window.location.href, {
-                        method: 'POST',
-                        body: JSON.stringify(data),
-                    })
-                    const html = await resp.text()
+                    let html
+                    try {
+                        const resp = await fetch(window.location.href, {
+                            method: 'POST',
+                            body: JSON.stringify(data),
+                        })
+                        html = await resp.text()
+                    } catch(_) {}
 
                     document.open()
-                    document.write(html)
+                    document.write(html ?? 'Uh oh - check your server')
                     document.close()
                 }
             }
