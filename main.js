@@ -6,9 +6,9 @@ const path = require('path')
 
 const fsPromises = fs.promises
 const location = process.argv[1]
-const isDev = (process.argv[2] == '--dev')
+const isDev = (process.argv[2] === '--dev')
 
-if(process.argv[2] != undefined && !isDev) {
+if(process.argv[2] !== undefined && !isDev) {
     /*      process.argv[2] is defined and it is not "--dev"      */ throw {}
 }
 
@@ -34,7 +34,7 @@ async function _serveHTML(res, file, dict={}) {
 }
 
 function makeSafe(func) {
-    if(typeof func == 'function') {
+    if(typeof func === 'function') {
         return async (serveHTML, data) => {
             await func.apply(null, [serveHTML, data])
         }
@@ -83,7 +83,7 @@ module.exports = function (
             }
         }
 
-        if(req.url != '/') {
+        if(req.url !== '/') {
             if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
                 res.setHeader('content-type', 'text/javascript')
             }
@@ -109,23 +109,33 @@ module.exports = function (
                 })
             }
         } else {
-            if(req.method == 'POST') {
+            if(req.method === 'POST') {
                 let body = ''
                 req.on('data', chunk => {
                     body += chunk.toString()
                 })
                 req.on('end', () => {
-                    postLoad(dict => {
-                        serveNeeded = false
-                        _serveHTML(res, rootIndexHTMLFile, dict)
-                    }, JSON.parse(body))
-                    .then(() => {
-                        if(serveNeeded) {
-                            _serveHTML(res, rootIndexHTMLFile)
-                        }
-                    })
+                    let json
+                    try {
+                        json = JSON.parse(body)
+                    } catch(_) {}
+
+                    if(json === undefined) {
+                        res.writeHead(500)
+                        res.end("Internal Server Error")
+                    } else {
+                        postLoad(dict => {
+                            serveNeeded = false
+                            _serveHTML(res, rootIndexHTMLFile, dict)
+                        }, JSON.parse(body))
+                        .then(() => {
+                            if(serveNeeded) {
+                                _serveHTML(res, rootIndexHTMLFile)
+                            }
+                        })
+                    }
                 })
-            } else if(req.method == 'GET') {
+            } else if(req.method === 'GET') {
                 firstLoad(dict => {
                     serveNeeded = false
                     _serveHTML(res, rootIndexHTMLFile, dict)
