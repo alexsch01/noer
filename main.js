@@ -2,7 +2,6 @@
 const https = require('https')
 const http = require('http')
 const fs = require('fs')
-const qs = require('querystring')
 const path = require('path')
 
 const fsPromises = fs.promises
@@ -119,7 +118,7 @@ module.exports = function (
                     postLoad(dict => {
                         serveNeeded = false
                         _serveHTML(res, rootIndexHTMLFile, dict)
-                    }, qs.parse(body))
+                    }, JSON.parse(body))
                     .then(() => {
                         if(serveNeeded) {
                             _serveHTML(res, rootIndexHTMLFile)
