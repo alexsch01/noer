@@ -16,31 +16,58 @@ public/index.html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculator</title>
+
+    <script>
+        window.onload = function() {
+            const forms = document.querySelectorAll('form[class="noerForm"]')
+            for (const form of forms) {
+                form.onsubmit = async (e) => {
+                    e.preventDefault()
+                    const data = Object.fromEntries(new FormData(e.target).entries());
+                    console.log(data)
+
+                    const resp = await fetch(window.location.href, {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                    })
+                    const html = await resp.text()
+
+                    document.open()
+                    document.write(html)
+                    document.close()
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>Calculator</h1>
-    <form method="post">
+    <form class="noerForm">
         <input name="left">
         <input name="right">
-        <button name="add">Add</button>
+        <input name="action" value="add" hidden>
+        <button>Add</button>
     </form>
     <br>
-    <form method="post">
+    <form class="noerForm">
         <input name="left">
         <input name="right">
-        <button name="subtract">Subtract</button>
+        <input name="action" value="subtract" hidden>
+        <button>Subtract</button>
     </form>
     <br>
-    <form method="post">
+    <form class="noerForm">
         <input name="left">
         <input name="right">
-        <button name="multiply">Multiply</button>
+        <input name="action" value="multiply" hidden>
+        <button>Multiply</button>
     </form>
     <br>
-    <form method="post">
+    <form class="noerForm">
         <input name="left">
         <input name="right">
-        <button name="divide">Divide</button>
+        <input name="action" value="divide" hidden>
+        <button>Divide</button>
     </form>
     @{results}
 </body>
@@ -56,19 +83,19 @@ noer('public/', [8080], (serveHTML, data) => {
     const left = parseFloat(data.left)
     const right = parseFloat(data.right)
 
-    if('add' in data) {
+    if(data.action === 'add') {
         answer = left + right
         operator = '+'
     }
-    if('subtract' in data) {
+    if(data.action === 'subtract') {
         answer = left - right
         operator = '-'
     }
-    if('multiply' in data) {
+    if(data.action === 'multiply') {
         answer = left * right
         operator = 'x'
     }
-    if('divide' in data) {
+    if(data.action === 'divide') {
         answer = left / right
         operator = '/'
     }
