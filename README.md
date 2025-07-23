@@ -24,7 +24,6 @@ public/index.html
                 form.onsubmit = async (e) => {
                     e.preventDefault()
                     const data = Object.fromEntries(new FormData(e.target).entries())
-                    console.log(data)
 
                     const resp = await fetch(window.location.href, {
                         method: 'POST',
