@@ -23,7 +23,7 @@ public/index.html
             for (const form of forms) {
                 form.onsubmit = async (e) => {
                     e.preventDefault()
-                    const data = Object.fromEntries(new FormData(e.target).entries());
+                    const data = Object.fromEntries(new FormData(e.target).entries())
                     console.log(data)
 
                     const resp = await fetch(window.location.href, {
