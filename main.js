@@ -28,7 +28,7 @@ myPath += path.sep
  * @param {number} param.port
  * 
  * @param {string} [param.hostname]
- * @param {Record<string, ((any) => {
+ * @param {Record<string, ((data: Record<string, string>) => {
  *  statusCode?: number,
  *  headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[],
  *  chunk?: any,
