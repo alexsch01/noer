@@ -20,136 +20,156 @@ if(fs.lstatSync(location).isDirectory()) {
 }
 myPath += path.sep
 
-let originalHTML
+/**
+ * @param {object} param
+ * 
+ * 
+ * @param {string} param.publicDir
+ * @param {number} param.port
+ * 
+ * @param {string} [param.hostname]
+ * @param {Record<string, ((data: Record<string, string>) => {
+ *  statusCode?: number,
+ *  headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[],
+ *  chunk?: any,
+ * } | string | Promise<String>) | string>} [param.routes]
+ * @param {{ key: string, cert: string }} [param.httpsOptions]
+ */
+module.exports = function ({
+    publicDir,
+    port,
 
-async function _serveHTML(res, file, dict={}) {
-    if(originalHTML == undefined || isDev) {
-        originalHTML = (await fsPromises.readFile(file)).toString()
-    }
-    let html = originalHTML
-    for(const key in dict) {
-        html = html.replaceAll(`@{${key}}`, dict[key])
-    }
-    res.end(html.replace(/@{.*?}/g, ''))
-}
-
-function makeSafe(func) {
-    if(typeof func === 'function') {
-        return async (serveHTML, data) => {
-            await func.apply(null, [serveHTML, data])
-        }
-    }
-    return async (serveHTML) => serveHTML()
-}
-
-module.exports = function (
-    /** @type {string} */ publicDir, 
-    /** @type {readonly [number, string?]} */ [port, hostname],
-    /** @type {((serveHTML: Function, data: Record<string, string>) => any)?} */ postLoad,
-    /** @type {((serveHTML: Function) => any)?} */ firstLoad,
-    /** @type {{key: any, cert: any}?} */ httpsOptions,
-    /** @type {Record<string, string>?} */ redirects,
-) {
+    hostname,
+    routes,
+    httpsOptions,
+}) {
     publicDir = path.resolve(myPath, publicDir)
-    hostname ??= 'localhost'
-    postLoad = makeSafe(postLoad)
-    firstLoad = makeSafe(firstLoad)
-    httpsOptions ??= {key: null, cert: null}
-    redirects ??= {}
 
-    let /** @type {http} */ protocol
+    hostname ??= 'localhost'
+    routes ??= {}
+    httpsOptions ??= {key: '', cert: ''}
+
+    let /** @type {https} */ protocol
+    const options = {}
     if(httpsOptions.key && httpsOptions.cert) {
-        httpsOptions.key = fs.readFileSync(path.resolve(myPath, httpsOptions.key))
-        httpsOptions.cert = fs.readFileSync(path.resolve(myPath, httpsOptions.cert))
+        options.key = fs.readFileSync(path.resolve(myPath, httpsOptions.key))
+        options.cert = fs.readFileSync(path.resolve(myPath, httpsOptions.cert))
         protocol = https
     } else {
+        // @ts-expect-error
         protocol = http
     }
 
-    const otherThanHTML = {}
-    const rootIndexHTMLFile = path.resolve(publicDir, 'index.html')
+    const cache = {}
 
-    const server = protocol.createServer(httpsOptions, (req, res) => {
-        let serveNeeded = true
+    /**
+     * @param {http.IncomingMessage} request 
+     * @returns {Promise<string>}
+     */
+    const getPayloadString = function(request) {
+        return new Promise((resolve) => {
+            let body = ''
+            request.on('data', (chunk) => {
+                body += chunk
+            }).on('end', () => {
+                resolve(body)
+            })
+        })
+    }
+
+    const server = protocol.createServer(options, async (req, res) => {
+        if (req.url === undefined) throw new Error("req.url is undefined")
         req.url = req.url.split('?')[0]
 
-        for(const [origin, destination] of Object.entries(redirects)) {
-            if (req.url === origin) {
+        let requestPayload
+        try {
+            const payloadString = await getPayloadString(req)
+            if (payloadString !== "") {
+                requestPayload = JSON.parse(payloadString)
+            }
+        } catch(_) {
+            res.writeHead(500)
+            res.end("Internal server error")
+            return
+        }
+
+        if(req.url in routes) {
+            const route = routes[req.url]
+            if (typeof route === 'string') {
                 res.writeHead(302, {
-                    location: destination
+                    location: route
                 })
                 res.end()
                 return
             }
+
+            let result
+            try {
+                result = await route(requestPayload)
+            } catch(_) {
+                res.writeHead(500)
+                res.end("Internal server error")
+                return
+            }
+
+            if (typeof result === 'string') {
+                res.end(result)
+                return
+            }
+
+            try {
+                const { statusCode, headers, chunk } = result
+                res.writeHead(statusCode ?? 200, headers)
+                res.end(chunk, undefined)
+            } catch(_) {
+                res.writeHead(500)
+                res.end("Internal server error")
+            } finally {
+                return
+            }
         }
 
-        if(req.url !== '/') {
-            if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
-                res.setHeader('content-type', 'text/javascript')
-            }
-            
-            if(req.url.endsWith('.wasm')) {
-                res.setHeader('content-type', 'application/wasm')
-            }
+        if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
+            res.setHeader('content-type', 'text/javascript')
+        }
+        
+        if(req.url.endsWith('.wasm')) {
+            res.setHeader('content-type', 'application/wasm')
+        }
 
-            if(otherThanHTML[req.url] && !isDev) {
-                res.end(otherThanHTML[req.url])
-            } else {
-                fsPromises.readFile(path.resolve(publicDir, req.url.substring(1))).then((buffer) => {
-                    res.end(buffer)
-                    otherThanHTML[req.url] = buffer
-                }).catch((_) => {
-                    fsPromises.readFile(path.resolve(publicDir, req.url.substring(1), 'index.html')).then((buffer) => {
+        if(cache[req.url] && !isDev) {
+            res.end(cache[req.url])
+            return
+        }
+
+        fsPromises.readFile(path.resolve(publicDir, req.url.substring(1)))
+            .then((buffer) => {
+                res.end(buffer)
+                cache[req.url] = buffer
+            })
+            .catch((_) => {
+                if (req.url === undefined) throw new Error("req.url is undefined")
+
+                fsPromises.readFile(path.resolve(publicDir, req.url.substring(1), 'index.html'))
+                    .then((buffer) => {
                         res.end(buffer)
-                        otherThanHTML[req.url] = buffer
-                    }).catch((_) => {
+                        cache[req.url] = buffer
+                    })
+                    .catch((_) => {
                         res.writeHead(404)
                         res.end("404 Not Found")
                     })
-                })
-            }
-        } else {
-            if(req.method === 'POST') {
-                let body = ''
-                req.on('data', chunk => {
-                    body += chunk.toString()
-                })
-                req.on('end', () => {
-                    let json
-                    try {
-                        json = JSON.parse(body)
-                    } catch(_) {}
-
-                    if(json === undefined) {
-                        res.writeHead(500)
-                        res.end("Internal Server Error")
-                    } else {
-                        postLoad(dict => {
-                            serveNeeded = false
-                            _serveHTML(res, rootIndexHTMLFile, dict)
-                        }, JSON.parse(body))
-                        .then(() => {
-                            if(serveNeeded) {
-                                _serveHTML(res, rootIndexHTMLFile)
-                            }
-                        })
-                    }
-                })
-            } else if(req.method === 'GET') {
-                firstLoad(dict => {
-                    serveNeeded = false
-                    _serveHTML(res, rootIndexHTMLFile, dict)
-                })
-                .then(() => {
-                    if(serveNeeded) {
-                        _serveHTML(res, rootIndexHTMLFile)
-                    }
-                })
-            }
-        }
+        })
     })
 
     server.listen(port, hostname, () => {
-        console.log(`Listening on ${hostname}:${server.address().port}`)
+        const address = server.address()
+        if (address === null) {
+            throw new Error("server.address() is null")
+        } else if (typeof address === 'string') {
+            throw new Error("server.address() is a string, which is not expected")
+        } else {
+            console.log(`Listening on ${hostname}:${address.port}`)
+        }
     })
 }
