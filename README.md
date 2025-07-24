@@ -25,18 +25,28 @@ public/index.html
                     e.preventDefault()
                     const data = Object.fromEntries(new FormData(e.target).entries())
 
-                    let html
+                    document.querySelectorAll('[name="left"]').forEach(elem => {
+                        elem.value = ''
+                    })
+                    document.querySelectorAll('[name="right"]').forEach(elem => {
+                        elem.value = ''
+                    })
+
+                    let json
                     try {
-                        const resp = await fetch(window.location.href, {
+                        const resp = await fetch('/getData', {
                             method: 'POST',
                             body: JSON.stringify(data),
                         })
-                        html = await resp.text()
+                        json = await resp.json()
                     } catch(_) {}
 
-                    document.open()
-                    document.write(html ?? 'Uh oh - check your server')
-                    document.close()
+                    if (json === undefined) {
+                        document.querySelector('[id="results"]').innerHTML = 'Uh oh - check your server'
+                        return
+                    }
+
+                    document.querySelector('[id="results"]').innerHTML = json.results
                 }
             }
         }
@@ -71,7 +81,7 @@ public/index.html
         <input name="action" value="divide" hidden>
         <button>Divide</button>
     </form>
-    @{results}
+    <p id="results"></p>
 </body>
 </html>
 ```
@@ -80,30 +90,39 @@ server.js
 ```js
 const noer = require('noer')
 
-noer('public/', [8080], (serveHTML, data) => {
-    let answer, operator
-    const left = parseFloat(data.left)
-    const right = parseFloat(data.right)
+noer({
+    publicDir: 'public/',
+    port: 8080,
+    routes: {
+        '/getData': (data) => {
+            let answer, operator
+            const left = parseFloat(data.left)
+            const right = parseFloat(data.right)
 
-    if(data.action === 'add') {
-        answer = left + right
-        operator = '+'
-    }
-    if(data.action === 'subtract') {
-        answer = left - right
-        operator = '-'
-    }
-    if(data.action === 'multiply') {
-        answer = left * right
-        operator = 'x'
-    }
-    if(data.action === 'divide') {
-        answer = left / right
-        operator = '/'
-    }
+            if(data.action === 'add') {
+                answer = left + right
+                operator = '+'
+            }
+            if(data.action === 'subtract') {
+                answer = left - right
+                operator = '-'
+            }
+            if(data.action === 'multiply') {
+                answer = left * right
+                operator = 'x'
+            }
+            if(data.action === 'divide') {
+                answer = left / right
+                operator = '/'
+            }
 
-    if(Number.isFinite(answer)) {
-        serveHTML({results: `<p>${left} ${operator} ${right} = ${answer}</p>`})
+            let results = ''
+            if(Number.isFinite(answer)) {
+                results = `${left} ${operator} ${right} = ${answer}`
+            }
+
+            return JSON.stringify({ results })
+        }
     }
 })
 ```
