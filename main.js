@@ -166,10 +166,10 @@ module.exports = function ({
         const address = server.address()
         if (address === null) {
             throw new Error("server.address() is null")
-        } else if (typeof address === 'string') {
-            throw new Error("server.address() is a string, which is not expected")
-        } else {
-            console.log(`Listening on ${hostname}:${address.port}`)
         }
+        if (typeof address === 'string') {
+            throw new Error("server.address() is a string, which is not expected")
+        }
+        console.log(`Listening on ${hostname}:${address.port}`)
     })
 }
