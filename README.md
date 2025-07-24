@@ -94,7 +94,7 @@ noer({
     publicDir: 'public/',
     port: 8080,
     routes: {
-        '/getData': (data) => {
+        '/getData': async (data) => {
             let answer, operator
             const left = parseFloat(data.left)
             const right = parseFloat(data.right)
