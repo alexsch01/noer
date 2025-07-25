@@ -112,16 +112,11 @@ module.exports = function ({
                 return
             }
 
-            try {
-                const { statusCode, headers, chunk } = result
-                res.writeHead(statusCode ?? 200, headers)
-                res.end(chunk, undefined)
-            } catch(_) {
-                res.writeHead(500)
-                res.end("Internal server error")
-            } finally {
-                return
-            }
+            const { statusCode, headers, chunk } = result
+            res.writeHead(statusCode ?? 200, headers)
+            res.end(chunk, undefined)
+
+            return
         }
 
         if(req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
