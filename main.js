@@ -28,7 +28,7 @@ myPath += path.sep
  * @param {number} param.port
  * 
  * @param {string} [param.hostname]
- * @param {Record<string, ((data: Record<string, string>) => Promise<{
+ * @param {Record<string, ((data: any) => Promise<{
  *  statusCode?: number,
  *  headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[],
  *  chunk?: any,
@@ -81,18 +81,6 @@ module.exports = function ({
         if (req.url === undefined) throw new Error("req.url is undefined")
         req.url = req.url.split('?')[0]
 
-        let requestPayload
-        try {
-            const payloadString = await getPayloadString(req)
-            if (payloadString !== "") {
-                requestPayload = JSON.parse(payloadString)
-            }
-        } catch(_) {
-            res.writeHead(500)
-            res.end("Internal server error")
-            return
-        }
-
         if(req.url in routes) {
             const route = routes[req.url]
             if (typeof route === 'string') {
@@ -105,6 +93,13 @@ module.exports = function ({
 
             let result
             try {
+                const payloadString = await getPayloadString(req)
+
+                let requestPayload
+                if (payloadString !== "") {
+                    requestPayload = JSON.parse(payloadString)
+                }
+
                 result = await route(requestPayload)
             } catch(_) {
                 res.writeHead(500)
