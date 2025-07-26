@@ -93,6 +93,7 @@ for (const form of forms) {
 
 **server.js**
 ```js
+//@ts-check
 const noer = require('noer')
 
 noer({
