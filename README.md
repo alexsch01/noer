@@ -50,15 +50,13 @@ https://github.com/alexsch01/noer
     </form>
     <p id="results"></p>
 
-    <script src="index.js"></script>
+    <script type="module" src="index.js"></script>
 </body>
 </html>
 ```
 
 **public/index.js**
 ```js
-"use strict"
-
 const forms = document.querySelectorAll('form[class="noerForm"]')
 for (const form of forms) {
     form.onsubmit = async (e) => {
