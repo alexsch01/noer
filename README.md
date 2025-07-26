@@ -50,7 +50,7 @@ https://github.com/alexsch01/noer
     </form>
     <p id="results"></p>
 
-    <script type="index.js"></script>
+    <script src="index.js"></script>
 </body>
 </html>
 ```
