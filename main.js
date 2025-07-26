@@ -28,11 +28,7 @@ myPath += path.sep
  * @param {number} param.port
  * 
  * @param {string} [param.hostname]
- * @param {Record<string, ((data: any) => Promise<{
- *  statusCode?: number,
- *  headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[],
- *  chunk?: any,
- * }> | Promise<string>) | string>} [param.routes]
+ * @param {Record<string, ((data: any) => Promise<string>) | string>} [param.routes]
  * @param {{ key: string, cert: string }} [param.httpsOptions]
  */
 module.exports = function ({
@@ -112,10 +108,8 @@ module.exports = function ({
                 return
             }
 
-            const { statusCode, headers, chunk } = result
-            res.writeHead(statusCode ?? 200, headers)
-            res.end(chunk, undefined)
-
+            res.writeHead(500)
+            res.end("Internal server error")
             return
         }
 
