@@ -1,8 +1,8 @@
 //@ts-check
-const https = require('https')
-const http = require('http')
-const fs = require('fs')
-const path = require('path')
+const https = require('node:https')
+const http = require('node:http')
+const fs = require('node:fs')
+const path = require('node:path')
 
 const fsPromises = fs.promises
 const location = process.argv[1]
@@ -134,6 +134,12 @@ module.exports = function ({
             })
             .catch((_) => {
                 if (req.url === undefined) throw new Error("req.url is undefined")
+
+                if (req.url.includes('.')) {
+                    res.writeHead(404)
+                    res.end("404 Not Found")
+                    return
+                }
 
                 fsPromises.readFile(path.resolve(publicDir, req.url.substring(1), 'index.html'))
                     .then((buffer) => {
