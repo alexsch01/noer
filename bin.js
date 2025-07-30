@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const localPackageJSON = require('path').resolve(process.cwd(), 'package.json')
+const localPackageJSON = require('node:path').resolve(process.cwd(), 'package.json')
 let useGlobalPackage
 
 try {
