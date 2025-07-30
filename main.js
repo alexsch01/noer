@@ -22,6 +22,21 @@ if(fs.lstatSync(location).isDirectory()) {
 myPath += path.sep
 
 /**
+ * @param {http.IncomingMessage} request 
+ * @returns {Promise<string>}
+ */
+const getPayloadString = function(request) {
+    return new Promise((resolve) => {
+        let body = ''
+        request.on('data', (chunk) => {
+            body += chunk
+        }).on('end', () => {
+            resolve(body)
+        })
+    })
+}
+
+/**
  * @param {object} param
  * 
  * 
@@ -59,19 +74,22 @@ module.exports = function ({
 
     const cache = {}
 
-    /**
-     * @param {http.IncomingMessage} request 
-     * @returns {Promise<string>}
-     */
-    const getPayloadString = function(request) {
-        return new Promise((resolve) => {
-            let body = ''
-            request.on('data', (chunk) => {
-                body += chunk
-            }).on('end', () => {
-                resolve(body)
-            })
-        })
+    if (!isDev) {
+        const cacheFilesRecursively = function(dir, baseUrl = '') {
+            const entries = fs.readdirSync(dir, { withFileTypes: true })
+            for (const entry of entries) {
+                const entryPath = path.join(dir, entry.name)
+                const entryUrl = path.posix.join(baseUrl, entry.name)
+
+                if (entry.isDirectory()) {
+                    cacheFilesRecursively(entryPath, entryUrl)
+                } else if (entry.isFile()) {
+                    cache[`/${entryUrl}`] = fs.readFileSync(entryPath)
+                }
+            }
+        }
+
+        cacheFilesRecursively(publicDir)
     }
 
     const server = protocol.createServer(options, async (req, res) => {
@@ -122,15 +140,32 @@ module.exports = function ({
             res.setHeader('content-type', 'application/wasm')
         }
 
-        if(cache[req.url] && !isDev) {
-            res.end(cache[req.url])
+        if (!isDev) {
+            if (cache[req.url]) {
+                res.end(cache[req.url])
+                return
+            }
+
+            if (req.url.includes('.')) {
+                res.writeHead(404)
+                res.end("404 Not Found")
+                return
+            }
+
+            const urlWithoutIndex = path.posix.join(req.url, 'index.html')
+            if (cache[urlWithoutIndex]) {
+                res.end(cache[urlWithoutIndex])
+                return
+            }
+
+            res.writeHead(404)
+            res.end("404 Not Found")
             return
         }
 
         fsPromises.readFile(path.resolve(publicDir, req.url.substring(1)))
             .then((buffer) => {
                 res.end(buffer)
-                cache[req.url] = buffer
             })
             .catch((_) => {
                 if (req.url === undefined) throw new Error("req.url is undefined")
@@ -144,13 +179,13 @@ module.exports = function ({
                 fsPromises.readFile(path.resolve(publicDir, req.url.substring(1), 'index.html'))
                     .then((buffer) => {
                         res.end(buffer)
-                        cache[req.url] = buffer
                     })
                     .catch((_) => {
                         res.writeHead(404)
                         res.end("404 Not Found")
+                        return
                     })
-        })
+            })
     })
 
     server.listen(port, hostname, () => {
