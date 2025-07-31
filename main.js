@@ -89,7 +89,9 @@ module.exports = function ({
             }
         }
 
-        cacheFilesRecursively(publicDir)
+        try {
+            cacheFilesRecursively(publicDir)
+        } catch(_) {}
     }
 
     const server = protocol.createServer(options, async (req, res) => {
