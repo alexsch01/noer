@@ -37,15 +37,7 @@ const getPayloadString = function(request) {
 }
 
 /**
- * @param {object} param
- * 
- * 
- * @param {string} param.publicDir
- * @param {number} param.port
- * 
- * @param {string} [param.hostname]
- * @param {Record<string, ((data: any) => Promise<string>) | string>} [param.routes]
- * @param {{ key: string, cert: string }} [param.httpsOptions]
+ * @param {Parameters<import("./index.d.ts")>[0]} options
  */
 module.exports = function ({
     publicDir,
