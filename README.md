@@ -134,15 +134,17 @@ noer({
 ---
 
 #### How To Run
-Files in the `publicDir` directory will be cached after first load
+Files in the `publicDir` directory are cached before the server is created
 ```
 node server.js
 ```
-In a web browser, go to http://localhost:8080
 
 #### Dev Mode
-Files in the `publicDir` directory will be read from storage every load
+Files in the `publicDir` directory are read from storage every load
 ```
 node server.js --dev
 ```
+
+---
+
 In a web browser, go to http://localhost:8080
